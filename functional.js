@@ -10,7 +10,15 @@ function head(xs) {
   return xs[0]
 }
 
+function last(xs) {
+  return xs[xs.length - 1]
+}
+
 function tail(xs) {
+  return xs.slice(1)
+}
+
+function init(xs) {
   return xs.slice(1)
 }
 
@@ -25,9 +33,15 @@ Function.prototype.andThen = function (f) {
   }
 }
 
-Object.prototype.tap = function(f){
-  return f(this);
+function prefix(f) {
+  return function () {
+    var args = argumentsToArray(arguments);
+    return f.call(last(args), init(args));
+  }
 }
+
+var map = prefix(Array.prototype.map)
+var filter = prefix(Array.prototype.filter)
 
 Function.prototype.compose = function (g) {
   return g.andThen(this)
@@ -55,11 +69,11 @@ function cons(x, xs) {
   return [x].concat(xs)
 }
 
-Array.prototype.partition = function(eq) {
-  return [ this.filter(eq), this.filter(not.compose(eq))  ]
+function partition (eq, xs) {
+  return [ filter(eq, xs), filter(not.compose(eq), xs)  ]
 }
 
-Array.prototype.group = function(f) {
+function  group (f, xs) {
   if (isEmpty(this)) return [];
 
   var x = head(this),
@@ -70,13 +84,13 @@ Array.prototype.group = function(f) {
   })
 }
 
-Array.prototype.groupBy = function(f) {
-  return this.group(equalBy(f))
+function groupBy(f, xs) {
+  return xs.group(equalBy(f))
 }
 
-Array.prototype.toObject = function () {
+function toObject(xs) {
   var result = {}
-  this.forEach(function (it) {
+  xs.forEach(function (it) {
     result[it[0]] = it[1]
   });
   return result;
@@ -94,17 +108,16 @@ var reviews = [
   {sentiment: NEGATIVE_SENTIMENT}
 ]
 
-reviews.
-    groupBy(function (it) {
-      return it.sentiment
-    }).
-    map(function (it) {
-      return [it[0].sentiment, it.length]
-    }).
-    toObject().
-    tap(function (it) {
-      return {
-        positiveCount: it[POSITIVE_SENTIMENT] || 0,
-        negativeCount: it[NEGATIVE_SENTIMENT] || 0,
-        neutralCount: it[NEUTRAL_SENTIMENT]   || 0}
-    });
+groupBy.partial(function (it) {
+  return it.sentiment
+}).
+andThen(map.partial(function (it) {
+  return [it[0].sentiment, it.length]
+})).
+andThen(toObject).
+andThen(function (it) {
+  return {
+    positiveCount: it[POSITIVE_SENTIMENT] || 0,
+    negativeCount: it[NEGATIVE_SENTIMENT] || 0,
+    neutralCount: it[NEUTRAL_SENTIMENT] || 0}
+})(reviews)
