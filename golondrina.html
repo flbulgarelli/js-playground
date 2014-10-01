@@ -1,0 +1,38 @@
+<html>
+<head>
+	<title>Alimentador de Golondrinas</title>
+</head>
+<body>
+
+	<button onclick="crearGolondrina()" >Crear</button>
+	<div>Energia actual es: <span id="nivel-energia">-</span></div>
+	<button onclick="alimentarGolondrina()" >Alimentar</button>
+
+	<script src="https://code.jquery.com/jquery-git2.min.js"></script>
+	<script>
+	function actualizarUI() {
+		$("#nivel-energia").html(window.golondrina.energia) 
+	}
+
+	function crearGolondrina() {
+		window.golondrina = new Golondrina(100)
+		actualizarUI()
+	}
+	function alimentarGolondrina() {
+		window.golondrina.alimentar(20);
+		actualizarUI()
+	}
+
+	</script>
+	<script>
+	function Golondrina(energia) {
+		this.energia = energia;
+	}
+	Golondrina.prototype = {
+		alimentar: function(alpiste) {
+			this.energia += alpiste
+		}
+	}
+	</script>
+</body>
+</html>
